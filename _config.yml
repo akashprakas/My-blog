@@ -40,7 +40,7 @@ baseurl: "/My-blog" # the subpath of your site, e.g. "/blog".
 minima:
   social_links:
     twitter: akashaapz
-    github: fastai
+    #github: fastai
 
 # Set this to true to get LaTeX math equation support
 use_math: 
