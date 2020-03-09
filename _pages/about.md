@@ -4,10 +4,8 @@ title: About Me
 permalink: /about/
 ---
 
-This is where you put the contents of your *About* page. Like all your pages, it's in [Markdown](https://guides.github.com/features/mastering-markdown/) format.
-
-This website is powered by **[fastpages](https://github.com/fastai/fastpages)** [^1].
+I am an Engineer working in Mercedez Benz Research And Development India. My work is related to MAP validation using deep learning and geospatial data analysis.
 
 
 
-[^1]:a blogging platform that natively supports Jupyter notebooks in addition to other formats.
+
