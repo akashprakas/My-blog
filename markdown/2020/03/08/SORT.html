@@ -111,11 +111,38 @@ window.onload = wrap_img;
 
   <div class="post-content e-content" itemprop="articleBody">
     <ul class="section-nav">
-<li class="toc-entry toc-h1"><a href="#simple-online-and-realtime-tracking">SIMPLE ONLINE AND REALTIME TRACKING</a></li>
+<li class="toc-entry toc-h1"><a href="#simple-online-and-realtime-tracking">SIMPLE ONLINE AND REALTIME TRACKING</a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#brief-intro">Brief Intro…</a></li>
+</ul>
+</li>
 </ul><h1 id="simple-online-and-realtime-tracking">
 <a class="anchor" href="#simple-online-and-realtime-tracking" aria-hidden="true"><span class="octicon octicon-link"></span></a>SIMPLE ONLINE AND REALTIME TRACKING</h1>
 
-<p>This will be a walkthrough through the code of simple online and real time tracking.</p>
+<h3 id="brief-intro">
+<a class="anchor" href="#brief-intro" aria-hidden="true"><span class="octicon octicon-link"></span></a>Brief Intro…</h3>
+<p>I assume that you have read the paper and this will be a walk through of the implementation. Basically the paper assumes a constant velocity model. The detection ouputs are fed to the tracker and the tracker will track multiple object between frames. You can fine tune some of the parameters of the tracker to match your specific needs.</p>
+
+<p>###Code Walkthrough</p>
+
+<p>The Sort() class is the main class we use for updating the tracker. The init method of sort class is</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Sort</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">max_age</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">min_hits</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="s">"""
+    Sets key parameters for SORT
+    """</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">max_age</span> <span class="o">=</span> <span class="n">max_age</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">min_hits</span> <span class="o">=</span> <span class="n">min_hits</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trackers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">frame_count</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div></div>
+<p>The init method takes two arguments max_age and min_hits, max_age will be used to remove the trackers from the list of trackers. The tracker will have a  time_since_update variable which will get incremented by one each time an update is happening. So if we set max_age to 1 then it means that if were tracking an object in frames say 2,3,4 and in frames 5 and 6 the detection output(that is the tracker input) was empty then that tracker will be removed from the trackers list and even if the same object reapper (say our detector was not able to detect the object in frames 5 and 6 even though the object was there and in the 7th frame it detects) then a new tracker will be assigned to it.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#remove dead tracklet
+</span>        <span class="k">if</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">time_since_update</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_age</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">trackers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</code></pre></div></div>
 
 
   </div><a class="u-url" href="/My-blog/markdown/2020/03/08/SORT.html" hidden></a>
