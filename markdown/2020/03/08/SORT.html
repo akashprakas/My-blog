@@ -114,6 +114,7 @@ window.onload = wrap_img;
 <li class="toc-entry toc-h1"><a href="#simple-online-and-realtime-tracking">SIMPLE ONLINE AND REALTIME TRACKING</a>
 <ul>
 <li class="toc-entry toc-h3"><a href="#brief-intro">Brief Intro…</a></li>
+<li class="toc-entry toc-h3"><a href="#code-walkthrough">Code Walkthrough</a></li>
 </ul>
 </li>
 </ul><h1 id="simple-online-and-realtime-tracking">
@@ -123,7 +124,8 @@ window.onload = wrap_img;
 <a class="anchor" href="#brief-intro" aria-hidden="true"><span class="octicon octicon-link"></span></a>Brief Intro…</h3>
 <p>I assume that you have read the paper and this will be a walk through of the implementation. Basically the paper assumes a constant velocity model. The detection ouputs are fed to the tracker and the tracker will track multiple object between frames. You can fine tune some of the parameters of the tracker to match your specific needs.</p>
 
-<p>###Code Walkthrough</p>
+<h3 id="code-walkthrough">
+<a class="anchor" href="#code-walkthrough" aria-hidden="true"><span class="octicon octicon-link"></span></a>Code Walkthrough</h3>
 
 <p>The Sort() class is the main class we use for updating the tracker. The init method of sort class is</p>
 
@@ -143,6 +145,10 @@ window.onload = wrap_img;
 </span>        <span class="k">if</span><span class="p">(</span><span class="n">trk</span><span class="o">.</span><span class="n">time_since_update</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_age</span><span class="p">):</span>
           <span class="bp">self</span><span class="o">.</span><span class="n">trackers</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 </code></pre></div></div>
+
+<p>The main method in sort is the <code class="highlighter-rouge">update(self,dets)</code> which takes in the detector output as input. The detector output is expected to be a 
+numpy array of the form <code class="highlighter-rouge">[[x1,y1,x2,y2,score],[x1,y1,x2,y2,score],...]</code>.Also make sure you call this method even when there are empty
+detections with the np.empty(0,5).</p>
 
 
   </div><a class="u-url" href="/My-blog/markdown/2020/03/08/SORT.html" hidden></a>
