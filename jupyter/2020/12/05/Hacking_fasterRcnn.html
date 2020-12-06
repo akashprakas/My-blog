@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Hacking Into FasterRcnn in Pytorch | Akash’s Blog</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Hacking Into FasterRcnn in Pytorch" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Writing of some technical stuff." />
+<meta property="og:description" content="Writing of some technical stuff." />
+<link rel="canonical" href="https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html" />
+<meta property="og:url" content="https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html" />
+<meta property="og:site_name" content="Akash’s Blog" />
+<meta property="og:image" content="https://akashprakas.github.io/My-blog/images/chart-preview.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-05T00:00:00-06:00" />
+<script type="application/ld+json">
+{"headline":"Hacking Into FasterRcnn in Pytorch","dateModified":"2020-12-05T00:00:00-06:00","datePublished":"2020-12-05T00:00:00-06:00","description":"Writing of some technical stuff.","image":"https://akashprakas.github.io/My-blog/images/chart-preview.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html"},"@type":"BlogPosting","url":"https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/My-blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://akashprakas.github.io/My-blog/feed.xml" title="Akash's Blog" /><link rel="shortcut icon" type="image/x-icon" href="/My-blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Hacking Into FasterRcnn in Pytorch | Akash’s Blog</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Hacking Into FasterRcnn in Pytorch" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Writing of some technical stuff." />
+<meta property="og:description" content="Writing of some technical stuff." />
+<link rel="canonical" href="https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html" />
+<meta property="og:url" content="https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html" />
+<meta property="og:site_name" content="Akash’s Blog" />
+<meta property="og:image" content="https://akashprakas.github.io/My-blog/images/chart-preview.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2020-12-05T00:00:00-06:00" />
+<script type="application/ld+json">
+{"headline":"Hacking Into FasterRcnn in Pytorch","dateModified":"2020-12-05T00:00:00-06:00","datePublished":"2020-12-05T00:00:00-06:00","description":"Writing of some technical stuff.","image":"https://akashprakas.github.io/My-blog/images/chart-preview.png","mainEntityOfPage":{"@type":"WebPage","@id":"https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html"},"@type":"BlogPosting","url":"https://akashprakas.github.io/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://akashprakas.github.io/My-blog/feed.xml" title="Akash's Blog" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    // remove paragraph tags in rendered toc (happens from notebooks)
+    var toctags = document.querySelectorAll(".toc-entry")
+    toctags.forEach(e => (e.firstElementChild.innerText = e.firstElementChild.innerText.replace('¶', '')))
+    });
+</script>
+</head><body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/My-blog/">Akash&#39;s Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/My-blog/about/">About Me</a><a class="page-link" href="/My-blog/search/">Search</a><a class="page-link" href="/My-blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Hacking Into FasterRcnn in Pytorch</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2020-12-05T00:00:00-06:00" itemprop="datePublished">
+        Dec 5, 2020
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      9 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/My-blog/categories/#jupyter">jupyter</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/akashprakas/My-blog/tree/master/_notebooks/2020-12-05-Hacking_fasterRcnn.ipynb" role="button">
+<img class="notebook-badge-image" src="/My-blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div><div class="px-2">
+    <a href="https://colab.research.google.com/github/akashprakas/My-blog/blob/master/_notebooks/2020-12-05-Hacking_fasterRcnn.ipynb">
+        <img class="notebook-badge-image" src="/My-blog/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h1"><a href="#Brief-Intro">Brief Intro </a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#Small-Insight-into-the-model">Small Insight into the model </a></li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#Custom-Backone">Custom Backone </a>
+<ul>
+<li class="toc-entry toc-h2"><a href="#Custom-Backbone-without-FPN">Custom Backbone without FPN </a></li>
+<li class="toc-entry toc-h2"><a href="#Custom-Backbone-with-FPN">Custom Backbone with FPN </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Adding-a-different-resenet-backbone">Adding a different resenet backbone </a></li>
+<li class="toc-entry toc-h3"><a href="#Using-all-layers-from-FPN">Using all layers from FPN </a></li>
+<li class="toc-entry toc-h3"><a href="#Using-not-all-layers-from-FPN">Using not all layers from FPN </a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-entry toc-h1"><a href="#Custom-Predictor">Custom Predictor </a></li>
+<li class="toc-entry toc-h1"><a href="#Custom-BoxHead">Custom BoxHead </a></li>
+<li class="toc-entry toc-h1"><a href="#CustomLoss-Function">CustomLoss Function </a></li>
+<li class="toc-entry toc-h1"><a href="#Note-on-how-to-vary-the-anchor-generator">Note on how to vary the anchor generator </a></li>
+<li class="toc-entry toc-h1"><a href="#Credits">Credits </a></li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2020-12-05-Hacking_fasterRcnn.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Brief-Intro">
+<a class="anchor" href="#Brief-Intro" aria-hidden="true"><span class="octicon octicon-link"></span></a>Brief Intro<a class="anchor-link" href="#Brief-Intro"> </a>
+</h1>
+<p>In the post I will show how to tweak some of the internals of FaterRcnn in Pytorch. I am assuming the reader is sommeone who already have trained an object detection model using pytorch. If not there is and excellent tutorial in <a href="https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html">pytorch site</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Small-Insight-into-the-model">
+<a class="anchor" href="#Small-Insight-into-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Small Insight into the model<a class="anchor-link" href="#Small-Insight-into-the-model"> </a>
+</h2>
+<p>Basically Faster Rcnn is a two stage detector</p>
+<ol>
+<li>The first stage is the Region proposal network which is resposible for knowing the objectness and corresponding bounding boxes. So essentially the RegionProposalNetwork will give the proposals of whether and object is there or not</li>
+<li>These proposals will be used by the RoIHeads which outputs the detections .<ul>
+<li>Inside the RoIHeads roi align is done</li>
+<li>There will be a box head and box predictor</li>
+<li>The losses for the predictions</li>
+</ul>
+</li>
+<li>In this post i will try to show how we can add custom parts to the torchvision FasterRcnn</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#collapse-hide</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+<span class="kn">from</span> <span class="nn">torchvision.models.detection</span> <span class="kn">import</span> <span class="n">FasterRCNN</span>
+<span class="kn">from</span> <span class="nn">torchvision.models.detection.rpn</span> <span class="kn">import</span> <span class="n">AnchorGenerator</span>
+<span class="kn">from</span> <span class="nn">torchvision.models.detection.faster_rcnn</span> <span class="kn">import</span> <span class="n">FastRCNNPredictor</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'torch version </span><span class="si">{</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">'torchvision version </span><span class="si">{</span><span class="n">torchvision</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s1">'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>torch version 1.7.0
+torchvision version 0.8.1
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Custom-Backone">
+<a class="anchor" href="#Custom-Backone" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Backone<a class="anchor-link" href="#Custom-Backone"> </a>
+</h1>
+<ol>
+<li>The backbone can be without FeaturePyramidNetwork</li>
+<li>With FeaturePyramidNetwork</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Custom-Backbone-without-FPN">
+<a class="anchor" href="#Custom-Backbone-without-FPN" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Backbone without FPN<a class="anchor-link" href="#Custom-Backbone-without-FPN"> </a>
+</h2>
+<p>This is pretty well written in the pytorch tutorials section, i will add some comments to it additionally</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">backbone</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">mobilenet_v2</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">features</span>
+<span class="c1">#we need to specify an outchannel of this backone specifically because this outchannel will be</span>
+<span class="c1">#used as an inchannel for the RPNHEAD which is producing the out of RegionProposalNetwork</span>
+<span class="c1">#we can know the number of outchannels by looking into the backbone "backbone??"</span>
+<span class="n">backbone</span><span class="o">.</span><span class="n">out_channels</span> <span class="o">=</span> <span class="mi">1280</span>
+<span class="c1">#by default the achor generator FasterRcnn assign will be for a FPN backone, so</span>
+<span class="c1">#we need to specify a  different anchor generator</span>
+<span class="n">anchor_generator</span> <span class="o">=</span> <span class="n">AnchorGenerator</span><span class="p">(</span><span class="n">sizes</span><span class="o">=</span><span class="p">((</span><span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">),),</span>
+                                   <span class="n">aspect_ratios</span><span class="o">=</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),))</span>
+<span class="c1">#here at each position in the grid there will be 3x3=9 anchors</span>
+<span class="c1">#and if our backbone is not FPN then the forward method will assign the name '0' to feature map</span>
+<span class="c1">#so we need to specify '0 as feature map name'</span>
+<span class="n">roi_pooler</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">MultiScaleRoIAlign</span><span class="p">(</span><span class="n">featmap_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'0'</span><span class="p">],</span>
+                                                 <span class="n">output_size</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+                                            <span class="n">sampling_ratio</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1">#the output size is the output shape of the roi pooled features which will be used by the box head</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">FasterRCNN</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">rpn_anchor_generator</span><span class="o">=</span><span class="n">anchor_generator</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">600</span><span class="p">)]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Custom-Backbone-with-FPN">
+<a class="anchor" href="#Custom-Backbone-with-FPN" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Backbone with FPN<a class="anchor-link" href="#Custom-Backbone-with-FPN"> </a>
+</h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The Resnet50Fpn available in torchvision</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># load a model pre-trained pre-trained on COCO</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">detection</span><span class="o">.</span><span class="n">fasterrcnn_resnet50_fpn</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># replace the classifier with a new one, that has</span>
+<span class="c1"># num_classes which is user-defined</span>
+<span class="n">num_classes</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># 1 class (person) + background</span>
+<span class="c1"># get number of input features for the classifier</span>
+<span class="n">in_features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span><span class="o">.</span><span class="n">cls_score</span><span class="o">.</span><span class="n">in_features</span>
+<span class="c1"># replace the pre-trained head with a new one</span>
+<span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span> <span class="o">=</span> <span class="n">FastRCNNPredictor</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">400</span><span class="p">)]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Adding-a-different-resenet-backbone">
+<a class="anchor" href="#Adding-a-different-resenet-backbone" aria-hidden="true"><span class="octicon octicon-link"></span></a>Adding a different resenet backbone<a class="anchor-link" href="#Adding-a-different-resenet-backbone"> </a>
+</h3>
+<ol>
+<li>Just change to a different resenet</li>
+<li>Shows how we should change roi_pooler and anchor_generator along with the backbone changes if we are not using all the layers from FPN</li>
+</ol>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Using-all-layers-from-FPN">
+<a class="anchor" href="#Using-all-layers-from-FPN" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using all layers from FPN<a class="anchor-link" href="#Using-all-layers-from-FPN"> </a>
+</h3>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#hte returned layers are layer1,layer2,layer3,layer4 in returned_layers</span>
+<span class="n">backbone</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">detection</span><span class="o">.</span><span class="n">backbone_utils</span><span class="o">.</span><span class="n">resnet_fpn_backbone</span><span class="p">(</span><span class="s1">'resnet101'</span><span class="p">,</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">FasterRCNN</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>                                                                       
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">400</span><span class="p">)]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Using-not-all-layers-from-FPN">
+<a class="anchor" href="#Using-not-all-layers-from-FPN" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using not all layers from FPN<a class="anchor-link" href="#Using-not-all-layers-from-FPN"> </a>
+</h3>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#just to show what will be out of of a normal resnet without fpn</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">resnet50</span><span class="p">()</span>
+<span class="n">pure</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="nb">list</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">children</span><span class="p">())[:</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">400</span><span class="p">,</span><span class="mi">400</span><span class="p">)</span>
+<span class="n">pure</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>torch.Size([1, 2048, 13, 13])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#hte returned layers are layer1,layer2,layer3,layer4 in returned_layers</span>
+<span class="n">backbone</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">detection</span><span class="o">.</span><span class="n">backbone_utils</span><span class="o">.</span><span class="n">resnet_fpn_backbone</span><span class="p">(</span><span class="s1">'resnet101'</span><span class="p">,</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                          <span class="n">returned_layers</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out</span> <span class="o">=</span> <span class="n">backbone</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">out</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="s1">'  '</span><span class="p">,</span><span class="n">out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>0    torch.Size([1, 256, 50, 50])
+1    torch.Size([1, 256, 25, 25])
+2    torch.Size([1, 256, 13, 13])
+pool    torch.Size([1, 256, 7, 7])
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#from the above we can see that the feature are feat maps should be 0,1,2,pool</span>
+<span class="c1">#where pool comes from the default extra block</span>
+<span class="n">roi_pooler</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">MultiScaleRoIAlign</span><span class="p">(</span><span class="n">featmap_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'0'</span><span class="p">,</span><span class="s1">'1'</span><span class="p">,</span><span class="s1">'2'</span><span class="p">,</span><span class="s1">'pool'</span><span class="p">],</span>
+                <span class="n">output_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span>
+                <span class="n">sampling_ratio</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>So essentially what we did was we selected the last three layers in FPN by specifying them in the returned layers, by default the backbone will add a pool layer on top of the last layer. So we are left with four layers. Now the RoIAlign need to be done in these four layers. If we dnt specify the RoIAlign it will use the by default assume we have used all layers from FPN. So we need to specifically give the feauture maps that we used. The usage of feature maps can be our application specific, some time you might need to detect small objects sometimes the object of interest will be large objects only.</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#we will need to give anchor_generator because the deafault anchor generator assumes we use all layers in fpn </span>
+<span class="c1">#since we have four layers in fpn here we need to specify 4 anchors</span>
+<span class="n">anchor_sizes</span> <span class="o">=</span> <span class="p">((</span><span class="mi">32</span><span class="p">),</span> <span class="p">(</span><span class="mi">64</span><span class="p">),</span> <span class="p">(</span><span class="mi">128</span><span class="p">),(</span><span class="mi">256</span><span class="p">)</span> <span class="p">)</span> 
+<span class="n">aspect_ratios</span> <span class="o">=</span> <span class="p">((</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span><span class="mf">2.0</span><span class="p">,))</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchor_sizes</span><span class="p">)</span>
+<span class="n">anchor_generator</span> <span class="o">=</span> <span class="n">AnchorGenerator</span><span class="p">(</span><span class="n">anchor_sizes</span><span class="p">,</span> <span class="n">aspect_ratios</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Since we have four layers in our FPN we need to specify the anchors. So here each feature map will have 4 anchors at each position.So the first feature map will have anchor size 32 and four of them will be there at each position in the feature map of aspect_ratios (0.5,1.0, 1.5,2.0). Now we can pass these to the FasterRCNN class</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">FasterRCNN</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">rpn_anchor_generator</span><span class="o">=</span><span class="n">anchor_generator</span><span class="p">,</span><span class="n">box_roi_pool</span><span class="o">=</span><span class="n">roi_pooler</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">400</span><span class="p">)]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Custom-Predictor">
+<a class="anchor" href="#Custom-Predictor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom Predictor<a class="anchor-link" href="#Custom-Predictor"> </a>
+</h1>
+<p>The predictor is what that outputs the classes and the corresponding  bboxes . By default these have two layers one for class and one for bboxes,but we can add more before it if we want to,so if you have a ton of data this might come handy,(remember there is already a box head before the predictor head)</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">Custom_predictor</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">in_channels</span><span class="p">,</span><span class="n">num_classes</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Custom_predictor</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">additional_layer</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span><span class="n">in_channels</span><span class="p">)</span> <span class="c1">#this is the additional layer  </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_score</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bbox_pred</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">num_classes</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        
+        
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span> <span class="o">==</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">start_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">additional_layer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_score</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">bbox_deltas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_pred</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">bbox_deltas</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">detection</span><span class="o">.</span><span class="n">fasterrcnn_resnet50_fpn</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1">#we need the out channels of the box head to pass tpp custom predictor</span>
+<span class="n">in_features</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_head</span><span class="o">.</span><span class="n">fc7</span><span class="o">.</span><span class="n">out_features</span>
+<span class="c1">#now we can add the custom predictor to the model</span>
+<span class="n">num_classes</span> <span class="o">=</span><span class="mi">2</span>
+<span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span> <span class="o">=</span> <span class="n">Custom_predictor</span><span class="p">(</span><span class="n">in_features</span><span class="p">,</span><span class="n">num_classes</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">400</span><span class="p">)]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Custom-BoxHead">
+<a class="anchor" href="#Custom-BoxHead" aria-hidden="true"><span class="octicon octicon-link"></span></a>Custom BoxHead<a class="anchor-link" href="#Custom-BoxHead"> </a>
+</h1>
+<p>The ouptuts of the roi_align are first passed through the box head before they are passed to the Predictor, this tow are two linear layers and we can customize them as we want, be careful with the dimensions since they can break the pipeline</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">detection</span><span class="o">.</span><span class="n">fasterrcnn_resnet50_fpn</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">CustomHead</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">in_channels</span><span class="p">,</span><span class="n">roi_outshape</span><span class="p">,</span><span class="n">representation_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CustomHead</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span><span class="n">in_channels</span><span class="p">,</span><span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="c1">#this is teh additional layer adde</span>
+        <span class="c1">#we will be sending a flattened layer, the size will eb in_channels*w*h, here roi_outshape represents it</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc6</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_channels</span><span class="o">*</span><span class="n">roi_outshape</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">representation_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc7</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">representation_size</span><span class="p">,</span> <span class="n">representation_size</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">x</span><span class="p">):</span>
+       <span class="c1"># breakpoint()</span>
+        
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">start_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc6</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc7</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ol>
+<li>we need in_channels and representation size, remember the output of this is the input of box_predictor, so we can get the representation size of them from the input of it</li>
+<li>The in_channels can be got from the backbone out channels,this will be the inchannels for the conv layer</li>
+<li>After the flattening the width and heigh also need to be considered which we wil get from roi_pool output</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">in_channels</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">out_channels</span> 
+<span class="n">roi_outshape</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_roi_pool</span><span class="o">.</span><span class="n">output_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">representation_size</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span><span class="o">.</span><span class="n">cls_score</span><span class="o">.</span><span class="n">in_features</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_head</span>  <span class="o">=</span> <span class="n">CustomHead</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span><span class="n">roi_outshape</span><span class="p">,</span><span class="n">representation_size</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span>
+<span class="n">model</span><span class="o">.</span><span class="n">roi_heads</span><span class="o">.</span><span class="n">box_predictor</span> <span class="o">=</span> <span class="n">FastRCNNPredictor</span><span class="p">(</span><span class="n">representation_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">400</span><span class="p">)]</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="CustomLoss-Function">
+<a class="anchor" href="#CustomLoss-Function" aria-hidden="true"><span class="octicon octicon-link"></span></a>CustomLoss Function<a class="anchor-link" href="#CustomLoss-Function"> </a>
+</h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<ol>
+<li>You can modify the loss by defining the fastrcnn_loss and making chages where you wnat.</li>
+<li>Then pass as say model.roi_heads.fastrcnn_loss = Custom_loss</li>
+<li>Usually you can replace the F.crossentropy loss by say Focal loss or label smoothing loss</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">torchvision.models.detection._utils</span> <span class="k">as</span> <span class="nn">det_utils</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The below function is taken from <a href="https://amaarora.github.io/2020/07/18/label-smoothing.html">Aman Aroras blog</a></p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Helper functions from fastai</span>
+<span class="k">def</span> <span class="nf">reduce_loss</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="k">if</span> <span class="n">reduction</span><span class="o">==</span><span class="s1">'mean'</span> <span class="k">else</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="k">if</span> <span class="n">reduction</span><span class="o">==</span><span class="s1">'sum'</span> <span class="k">else</span> <span class="n">loss</span>
+
+
+<span class="c1"># Implementation from fastai https://github.com/fastai/fastai2/blob/master/fastai2/layers.py#L338</span>
+<span class="k">class</span> <span class="nc">LabelSmoothingCrossEntropy</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ε</span><span class="p">:</span><span class="nb">float</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ε</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span> <span class="o">=</span> <span class="n">ε</span><span class="p">,</span><span class="n">reduction</span>
+    
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="c1"># number of classes</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">log_preds</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">reduce_loss</span><span class="p">(</span><span class="o">-</span><span class="n">log_preds</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+        <span class="n">nll</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">nll_loss</span><span class="p">(</span><span class="n">log_preds</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reduction</span><span class="p">)</span>
+        <span class="c1"># (1-ε)* H(q,p) + ε*H(u,p)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">ε</span><span class="p">)</span><span class="o">*</span><span class="n">nll</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ε</span><span class="o">*</span><span class="p">(</span><span class="n">loss</span><span class="o">/</span><span class="n">c</span><span class="p">)</span> 
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">custom_loss</span> <span class="o">=</span> <span class="n">LabelSmoothingCrossEntropy</span><span class="p">()</span>
+<span class="c1">#torchvision.models.detection.roi_heads.fastrcnn_loss??</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">custom_fastrcnn_loss</span><span class="p">(</span><span class="n">class_logits</span><span class="p">,</span> <span class="n">box_regression</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">regression_targets</span><span class="p">):</span>
+    <span class="c1"># type: (Tensor, Tensor, List[Tensor], List[Tensor]) -&gt; Tuple[Tensor, Tensor]</span>
+    <span class="sd">"""</span>
+<span class="sd">    Computes the loss for Faster R-CNN.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        class_logits (Tensor)</span>
+<span class="sd">        box_regression (Tensor)</span>
+<span class="sd">        labels (list[BoxList])</span>
+<span class="sd">        regression_targets (Tensor)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        classification_loss (Tensor)</span>
+<span class="sd">        box_loss (Tensor)</span>
+<span class="sd">    """</span>
+    
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">regression_targets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">regression_targets</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">classification_loss</span> <span class="o">=</span> <span class="n">custom_loss</span><span class="p">(</span><span class="n">class_logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1">#adding the custom loss here</span>
+
+    <span class="c1"># get indices that correspond to the regression targets for</span>
+    <span class="c1"># the corresponding ground truth labels, to be used with</span>
+    <span class="c1"># advanced indexing</span>
+    <span class="n">sampled_pos_inds_subset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">labels</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">labels_pos</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">sampled_pos_inds_subset</span><span class="p">]</span>
+    <span class="n">N</span><span class="p">,</span> <span class="n">num_classes</span> <span class="o">=</span> <span class="n">class_logits</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">box_regression</span> <span class="o">=</span> <span class="n">box_regression</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="n">box_loss</span> <span class="o">=</span> <span class="n">det_utils</span><span class="o">.</span><span class="n">smooth_l1_loss</span><span class="p">(</span>
+        <span class="n">box_regression</span><span class="p">[</span><span class="n">sampled_pos_inds_subset</span><span class="p">,</span> <span class="n">labels_pos</span><span class="p">],</span>
+        <span class="n">regression_targets</span><span class="p">[</span><span class="n">sampled_pos_inds_subset</span><span class="p">],</span>
+        <span class="n">beta</span><span class="o">=</span><span class="mi">1</span> <span class="o">/</span> <span class="mi">9</span><span class="p">,</span>
+        <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">box_loss</span> <span class="o">=</span> <span class="n">box_loss</span> <span class="o">/</span> <span class="n">labels</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">classification_loss</span><span class="p">,</span> <span class="n">box_loss</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Note-on-how-to-vary-the-anchor-generator">
+<a class="anchor" href="#Note-on-how-to-vary-the-anchor-generator" aria-hidden="true"><span class="octicon octicon-link"></span></a>Note on how to vary the anchor generator<a class="anchor-link" href="#Note-on-how-to-vary-the-anchor-generator"> </a>
+</h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The way in which anchor generators are assigned when we use backbone with and without fpn is different. When we are not using FPN there will be only one feature map and for that feature map we need to specify anchors of different shapes.</p>
+
+</div>
+</div>
+</div>anchor_generator = AnchorGenerator(sizes=((128, 256, 512),),
+                                   aspect_ratios=((0.5, 1.0, 2.0),))
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the above case save we have a feature map of shape 7x7, then at each cell in it there will be 9 anchors. But when we are using FPN we have different feature maps, so we dnt need to use all the sizes for all feature maps. Small sized objects are deteted using the earlier feature maps and thus for those we can specify a small sized anchor say 32 and for the later layers we can specify larger anchors</p>
+
+</div>
+</div>
+</div>anchor_sizes = ((32), (64), (128),(256) ) 
+aspect_ratios = ((0.5,1.0, 1.5,2.0,)) * len(anchor_sizes)
+anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>In the above i am using the same aspect ratio for all the sizes so i am just multiplying by the lenght of the anchor_sizes, but if we want to specify different aspect ratios its totally possible. But be carefull to specifiy the same amount of aspect ratios for each sizes.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Credits">
+<a class="anchor" href="#Credits" aria-hidden="true"><span class="octicon octicon-link"></span></a>Credits<a class="anchor-link" href="#Credits"> </a>
+</h1>
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">All</span> <span class="n">the</span> <span class="n">above</span> <span class="n">hacks</span> <span class="n">are</span> <span class="n">just</span> <span class="n">modification</span> <span class="n">of</span> <span class="n">the</span> <span class="n">existing</span> <span class="n">wonderful</span> <span class="n">torchvision</span> <span class="n">library</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="akashprakas/My-blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/My-blog/jupyter/2020/12/05/Hacking_fasterRcnn.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/My-blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/My-blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/My-blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Writing of some technical stuff.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://twitter.com/akashaapz" title="akashaapz"><svg class="svg-icon grey"><use xlink:href="/My-blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
