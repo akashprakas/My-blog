@@ -655,7 +655,7 @@ Estimated Total Size (MB): 501.06
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>If you look at the outputs of torchinfo you can see that the estimated total size is more for mobileNets than simpleConv block this isbecause we need to store 2 times the intermediate values during training  , but this wont be a problem for inference, during inference we only need to store the parameters and architecture, and thus looking above we can see that way fever parameters and total number of multiplications and additions needed is also low which helps in faster inference. If you want more info please read the papers which are well written. If you want to read about how the torchinfo works please read this <a href="http://jck.bio/pytorch_estimating_model_size/">blog</a> by Jacob C. Kimmel</p>
+<p>If you look at the outputs of torchinfo you can see that the estimated total size is more for mobileNets than simpleConv block this isbecause we need to store 2 times the intermediate values during training  , but this wont be a problem for inference, during inference we only need to store the parameters and architecture, and thus looking above we can see that way fewer parameters and total number of multiplications and additions needed is also low which helps in faster inference. If you want more info please read the papers which are well written. If you want to read about how the torchinfo works please read this <a href="http://jck.bio/pytorch_estimating_model_size/">blog</a> by Jacob C. Kimmel</p>
 
 </div>
 </div>
