@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Understanding the losses in CenterNet Architecture | Akash’s Blog</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Understanding the losses in CenterNet Architecture" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Writing of some technical stuff." />
+<meta property="og:description" content="Writing of some technical stuff." />
+<link rel="canonical" href="https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html" />
+<meta property="og:url" content="https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html" />
+<meta property="og:site_name" content="Akash’s Blog" />
+<meta property="og:image" content="https://akashprakas.github.io/My-blog/images/chart-preview.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-08-24T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"Writing of some technical stuff.","@type":"BlogPosting","headline":"Understanding the losses in CenterNet Architecture","dateModified":"2022-08-24T00:00:00-05:00","url":"https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html","datePublished":"2022-08-24T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html"},"image":"https://akashprakas.github.io/My-blog/images/chart-preview.png","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/My-blog/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="https://akashprakas.github.io/My-blog/feed.xml" title="Akash's Blog" /><link rel="shortcut icon" type="image/x-icon" href="/My-blog/images/favicon.ico"><!-- Begin Jekyll SEO tag v2.6.1 -->
+<title>Understanding the losses in CenterNet Architecture | Akash’s Blog</title>
+<meta name="generator" content="Jekyll v4.0.0" />
+<meta property="og:title" content="Understanding the losses in CenterNet Architecture" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Writing of some technical stuff." />
+<meta property="og:description" content="Writing of some technical stuff." />
+<link rel="canonical" href="https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html" />
+<meta property="og:url" content="https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html" />
+<meta property="og:site_name" content="Akash’s Blog" />
+<meta property="og:image" content="https://akashprakas.github.io/My-blog/images/chart-preview.png" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-08-24T00:00:00-05:00" />
+<script type="application/ld+json">
+{"description":"Writing of some technical stuff.","@type":"BlogPosting","headline":"Understanding the losses in CenterNet Architecture","dateModified":"2022-08-24T00:00:00-05:00","url":"https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html","datePublished":"2022-08-24T00:00:00-05:00","mainEntityOfPage":{"@type":"WebPage","@id":"https://akashprakas.github.io/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html"},"image":"https://akashprakas.github.io/My-blog/images/chart-preview.png","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+<link href="https://unpkg.com/@primer/css/dist/primer.css" rel="stylesheet" />
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.7/css/all.css"><link type="application/atom+xml" rel="alternate" href="https://akashprakas.github.io/My-blog/feed.xml" title="Akash's Blog" />
+
+<script>
+function wrap_img(fn) {
+    if (document.attachEvent ? document.readyState === "complete" : document.readyState !== "loading") {
+        var elements = document.querySelectorAll(".post img");
+        Array.prototype.forEach.call(elements, function(el, i) {
+            if (el.getAttribute("title")) {
+                const caption = document.createElement('figcaption');
+                var node = document.createTextNode(el.getAttribute("title"));
+                caption.appendChild(node);
+                const wrapper = document.createElement('figure');
+                wrapper.className = 'image';
+                el.parentNode.insertBefore(wrapper, el);
+                el.parentNode.removeChild(el);
+                wrapper.appendChild(el);
+                wrapper.appendChild(caption);
+            }
+        });
+    } else { document.addEventListener('DOMContentLoaded', fn); }
+}
+window.onload = wrap_img;
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+    // add link icon to anchor tags
+    var elem = document.querySelectorAll(".anchor-link")
+    elem.forEach(e => (e.innerHTML = '<i class="fas fa-link fa-xs"></i>'));
+    // remove paragraph tags in rendered toc (happens from notebooks)
+    var toctags = document.querySelectorAll(".toc-entry")
+    toctags.forEach(e => (e.firstElementChild.innerText = e.firstElementChild.innerText.replace('¶', '')))
+    });
+</script>
+</head><body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/My-blog/">Akash&#39;s Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/My-blog/about/">About Me</a><a class="page-link" href="/My-blog/search/">Search</a><a class="page-link" href="/My-blog/categories/">Tags</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Understanding the losses in CenterNet Architecture</h1><p class="post-meta post-meta-title"><time class="dt-published" datetime="2022-08-24T00:00:00-05:00" itemprop="datePublished">
+        Aug 24, 2022
+      </time>
+       • <span class="read-time" title="Estimated read time">
+    
+    
+      14 min read
+    
+</span></p>
+
+    
+      <p class="category-tags"><i class="fas fa-tags category-tags-icon"></i></i> 
+      
+        <a class="category-tags-link" href="/My-blog/categories/#jupyter">jupyter</a>
+        
+      
+      </p>
+    
+
+    
+      
+        <div class="pb-5 d-flex flex-wrap flex-justify-end">
+          <div class="px-2">
+
+    <a href="https://github.com/akashprakas/My-blog/tree/master/_notebooks/2022-08-24-Understanding the losses in CenterNet Architecture.ipynb" role="button">
+<img class="notebook-badge-image" src="/My-blog/assets/badges/github.svg" alt="View On GitHub">
+    </a>
+</div><div class="px-2">
+    <a href="https://colab.research.google.com/github/akashprakas/My-blog/blob/master/_notebooks/2022-08-24-Understanding the losses in CenterNet Architecture.ipynb">
+        <img class="notebook-badge-image" src="/My-blog/assets/badges/colab.svg" alt="Open In Colab"/>
+    </a>
+</div>
+        </div>
+      </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <ul class="section-nav">
+<li class="toc-entry toc-h1"><a href="#Brief-Intro">Brief Intro </a></li>
+<li class="toc-entry toc-h1"><a href="#How-to-generate-the-groundTruth-heat-maps">How to generate the groundTruth heat maps </a></li>
+<li class="toc-entry toc-h1"><a href="#HeatMap-loss">HeatMap loss </a></li>
+<li class="toc-entry toc-h1"><a href="#GroundTruth-WH-and-WH-offset">GroundTruth WH and WH offset </a>
+<ul>
+<li class="toc-entry toc-h3"><a href="#Final-Loss">Final Loss </a></li>
+</ul>
+</li>
+</ul><!--
+#################################################
+### THIS FILE WAS AUTOGENERATED! DO NOT EDIT! ###
+#################################################
+# file to edit: _notebooks/2022-08-24-Understanding the losses in CenterNet Architecture.ipynb
+-->
+
+<div class="container" id="notebook-container">
+        
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="Brief-Intro">
+<a class="anchor" href="#Brief-Intro" aria-hidden="true"><span class="octicon octicon-link"></span></a>Brief Intro<a class="anchor-link" href="#Brief-Intro"> </a>
+</h1>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is  a small demo of the how the ground truths and loss will look in centerNet. Most of the code is from <a href="https://github.com/open-mmlab/mmdetection">MMdetection</a>. The idea here is to show a demo part so that the code is understandable. The repo for understanding the architecure can be found <a href="https://github.com/akashprakas/CenterNet">here</a> . To understand the architecture please go through the blog by <a href="https://medium.com/visionwizard/centernet-objects-as-points-a-comprehensive-guide-2ed9993c48bc">Shreejal Trivedi</a>.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="How-to-generate-the-groundTruth-heat-maps">
+<a class="anchor" href="#How-to-generate-the-groundTruth-heat-maps" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to generate the groundTruth heat maps<a class="anchor-link" href="#How-to-generate-the-groundTruth-heat-maps"> </a>
+</h1>
+<ol>
+<li>We need to generate heatmap, the heatmap is generated such that at the center of the image the value will be 1 and decreasing around it like a gaussian.</li>
+<li>To calculate the radius we use the bbox height and width which have been scaled down to the feature map level.</li>
+<li>We can use the same function used in <a href="https://mmdetection.readthedocs.io/en/latest/_modules/mmdet/models/utils/gaussian_target.html">MMdetection</a>. You can find the detailed description in this <a href="https://mmdetection.readthedocs.io/en/latest/_modules/mmdet/models/utils/gaussian_target.html">link</a>
+</li>
+<li>Lets assume that our initial image was of size (64,64) and it was scaled down to (8,8) after the feature maps and lets assume the radius is 2, in reality the radius is calculated as the function shown below based on the bounding box size</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#collapse-hide</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<details class="description">
+      <summary class="btn btn-sm" data-open="Hide Code" data-close="Show Code"></summary>
+        <p></p>
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#collapse-hide</span>
+<span class="k">def</span> <span class="nf">gaussian2D</span><span class="p">(</span><span class="n">radius</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">'cpu'</span><span class="p">):</span>
+    <span class="sd">"""Generate 2D gaussian kernel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        radius (int): Radius of gaussian kernel.</span>
+<span class="sd">        sigma (int): Sigma of gaussian function. Default: 1.</span>
+<span class="sd">        dtype (torch.dtype): Dtype of gaussian tensor. Default: torch.float32.</span>
+<span class="sd">        device (str): Device of gaussian tensor. Default: 'cpu'.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        h (Tensor): Gaussian kernel with a</span>
+<span class="sd">            ``(2 * radius + 1) * (2 * radius + 1)`` shape.</span>
+<span class="sd">    """</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+        <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+        <span class="o">-</span><span class="n">radius</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">))</span><span class="o">.</span><span class="n">exp</span><span class="p">()</span>
+
+    <span class="n">h</span><span class="p">[</span><span class="n">h</span> <span class="o">&lt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">h</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">h</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">h</span>
+
+
+<span class="k">def</span> <span class="nf">gen_gaussian_target</span><span class="p">(</span><span class="n">heatmap</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">"""Generate 2D gaussian heatmap.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        heatmap (Tensor): Input heatmap, the gaussian kernel will cover on</span>
+<span class="sd">            it and maintain the max value.</span>
+<span class="sd">        center (list[int]): Coord of gaussian kernel's center.</span>
+<span class="sd">        radius (int): Radius of gaussian kernel.</span>
+<span class="sd">        k (int): Coefficient of gaussian kernel. Default: 1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        out_heatmap (Tensor): Updated heatmap covered by gaussian kernel.</span>
+<span class="sd">    """</span>
+    <span class="n">diameter</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">gaussian_kernel</span> <span class="o">=</span> <span class="n">gaussian2D</span><span class="p">(</span>
+        <span class="n">radius</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">diameter</span> <span class="o">/</span> <span class="mi">6</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">heatmap</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">heatmap</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">center</span>
+
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">top</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">radius</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">masked_heatmap</span> <span class="o">=</span> <span class="n">heatmap</span><span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">:</span><span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">:</span><span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">]</span>
+    <span class="n">masked_gaussian</span> <span class="o">=</span> <span class="n">gaussian_kernel</span><span class="p">[</span><span class="n">radius</span> <span class="o">-</span> <span class="n">top</span><span class="p">:</span><span class="n">radius</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">,</span>
+                                      <span class="n">radius</span> <span class="o">-</span> <span class="n">left</span><span class="p">:</span><span class="n">radius</span> <span class="o">+</span> <span class="n">right</span><span class="p">]</span>
+    <span class="n">out_heatmap</span> <span class="o">=</span> <span class="n">heatmap</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+        <span class="n">masked_heatmap</span><span class="p">,</span>
+        <span class="n">masked_gaussian</span> <span class="o">*</span> <span class="n">k</span><span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">out_heatmap</span><span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">:</span><span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">:</span><span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">out_heatmap</span>
+
+
+
+<span class="k">def</span> <span class="nf">gaussian_radius</span><span class="p">(</span><span class="n">det_size</span><span class="p">,</span> <span class="n">min_overlap</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">"""Generate 2D gaussian radius.</span>
+
+<span class="sd">    This function is modified from the `official github repo</span>
+<span class="sd">    &lt;https://github.com/princeton-vl/CornerNet-Lite/blob/master/core/sample/</span>
+<span class="sd">    utils.py#L65&gt;`_.</span>
+
+<span class="sd">    Given ``min_overlap``, radius could computed by a quadratic equation</span>
+<span class="sd">    according to Vieta's formulas.</span>
+
+<span class="sd">    There are 3 cases for computing gaussian radius, details are following:</span>
+
+<span class="sd">    - Explanation of figure: ``lt`` and ``br`` indicates the left-top and</span>
+<span class="sd">      bottom-right corner of ground truth box. ``x`` indicates the</span>
+<span class="sd">      generated corner at the limited position when ``radius=r``.</span>
+
+<span class="sd">    - Case1: one corner is inside the gt box and the other is outside.</span>
+
+<span class="sd">    .. code:: text</span>
+
+<span class="sd">        |&lt;   width   &gt;|</span>
+
+<span class="sd">        lt-+----------+         -</span>
+<span class="sd">        |  |          |         ^</span>
+<span class="sd">        +--x----------+--+</span>
+<span class="sd">        |  |          |  |</span>
+<span class="sd">        |  |          |  |    height</span>
+<span class="sd">        |  | overlap  |  |</span>
+<span class="sd">        |  |          |  |</span>
+<span class="sd">        |  |          |  |      v</span>
+<span class="sd">        +--+---------br--+      -</span>
+<span class="sd">           |          |  |</span>
+<span class="sd">           +----------+--x</span>
+
+<span class="sd">    To ensure IoU of generated box and gt box is larger than ``min_overlap``:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \cfrac{(w-r)*(h-r)}{w*h+(w+h)r-r^2} \ge {iou} \quad\Rightarrow\quad</span>
+<span class="sd">        {r^2-(w+h)r+\cfrac{1-iou}{1+iou}*w*h} \ge 0 \\</span>
+<span class="sd">        {a} = 1,\quad{b} = {-(w+h)},\quad{c} = {\cfrac{1-iou}{1+iou}*w*h}</span>
+<span class="sd">        {r} \le \cfrac{-b-\sqrt{b^2-4*a*c}}{2*a}</span>
+
+<span class="sd">    - Case2: both two corners are inside the gt box.</span>
+
+<span class="sd">    .. code:: text</span>
+
+<span class="sd">        |&lt;   width   &gt;|</span>
+
+<span class="sd">        lt-+----------+         -</span>
+<span class="sd">        |  |          |         ^</span>
+<span class="sd">        +--x-------+  |</span>
+<span class="sd">        |  |       |  |</span>
+<span class="sd">        |  |overlap|  |       height</span>
+<span class="sd">        |  |       |  |</span>
+<span class="sd">        |  +-------x--+</span>
+<span class="sd">        |          |  |         v</span>
+<span class="sd">        +----------+-br         -</span>
+
+<span class="sd">    To ensure IoU of generated box and gt box is larger than ``min_overlap``:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \cfrac{(w-2*r)*(h-2*r)}{w*h} \ge {iou} \quad\Rightarrow\quad</span>
+<span class="sd">        {4r^2-2(w+h)r+(1-iou)*w*h} \ge 0 \\</span>
+<span class="sd">        {a} = 4,\quad {b} = {-2(w+h)},\quad {c} = {(1-iou)*w*h}</span>
+<span class="sd">        {r} \le \cfrac{-b-\sqrt{b^2-4*a*c}}{2*a}</span>
+
+<span class="sd">    - Case3: both two corners are outside the gt box.</span>
+
+<span class="sd">    .. code:: text</span>
+
+<span class="sd">           |&lt;   width   &gt;|</span>
+
+<span class="sd">        x--+----------------+</span>
+<span class="sd">        |  |                |</span>
+<span class="sd">        +-lt-------------+  |   -</span>
+<span class="sd">        |  |             |  |   ^</span>
+<span class="sd">        |  |             |  |</span>
+<span class="sd">        |  |   overlap   |  | height</span>
+<span class="sd">        |  |             |  |</span>
+<span class="sd">        |  |             |  |   v</span>
+<span class="sd">        |  +------------br--+   -</span>
+<span class="sd">        |                |  |</span>
+<span class="sd">        +----------------+--x</span>
+
+<span class="sd">    To ensure IoU of generated box and gt box is larger than ``min_overlap``:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \cfrac{w*h}{(w+2*r)*(h+2*r)} \ge {iou} \quad\Rightarrow\quad</span>
+<span class="sd">        {4*iou*r^2+2*iou*(w+h)r+(iou-1)*w*h} \le 0 \\</span>
+<span class="sd">        {a} = {4*iou},\quad {b} = {2*iou*(w+h)},\quad {c} = {(iou-1)*w*h} \\</span>
+<span class="sd">        {r} \le \cfrac{-b+\sqrt{b^2-4*a*c}}{2*a}</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        det_size (list[int]): Shape of object.</span>
+<span class="sd">        min_overlap (float): Min IoU with ground truth for boxes generated by</span>
+<span class="sd">            keypoints inside the gaussian kernel.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        radius (int): Radius of gaussian kernel.</span>
+<span class="sd">    """</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">det_size</span>
+
+    <span class="n">a1</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">b1</span> <span class="o">=</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">min_overlap</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">min_overlap</span><span class="p">)</span>
+    <span class="n">sq1</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">b1</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">a1</span> <span class="o">*</span> <span class="n">c1</span><span class="p">)</span>
+    <span class="n">r1</span> <span class="o">=</span> <span class="p">(</span><span class="n">b1</span> <span class="o">-</span> <span class="n">sq1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a1</span><span class="p">)</span>
+
+    <span class="n">a2</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">b2</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">min_overlap</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
+    <span class="n">sq2</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">b2</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">a2</span> <span class="o">*</span> <span class="n">c2</span><span class="p">)</span>
+    <span class="n">r2</span> <span class="o">=</span> <span class="p">(</span><span class="n">b2</span> <span class="o">-</span> <span class="n">sq2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a2</span><span class="p">)</span>
+
+    <span class="n">a3</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">min_overlap</span>
+    <span class="n">b3</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">min_overlap</span> <span class="o">*</span> <span class="p">(</span><span class="n">height</span> <span class="o">+</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">c3</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_overlap</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">width</span> <span class="o">*</span> <span class="n">height</span>
+    <span class="n">sq3</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">b3</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">a3</span> <span class="o">*</span> <span class="n">c3</span><span class="p">)</span>
+    <span class="n">r3</span> <span class="o">=</span> <span class="p">(</span><span class="n">b3</span> <span class="o">+</span> <span class="n">sq3</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">a3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+    </details>
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">h</span> <span class="o">=</span> <span class="n">gaussian2D</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s1">'cpu'</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">h</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>tensor([[0.0183, 0.0821, 0.1353, 0.0821, 0.0183],
+        [0.0821, 0.3679, 0.6065, 0.3679, 0.0821],
+        [0.1353, 0.6065, 1.0000, 0.6065, 0.1353],
+        [0.0821, 0.3679, 0.6065, 0.3679, 0.0821],
+        [0.0183, 0.0821, 0.1353, 0.0821, 0.0183]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Our radius was 2 so we can see that at (2,2) the magnitude is 1 and in a gaussian kernel way,it decreases around.Now this heatmap will be copied to the center as required, but if the center is at the corners then cropping of the heatmap might be requried as needed</p>
+<ol>
+<li>As in the begining assume that the heatmap is of shape 8,8 and lets assume that the object is located at the center (3,3). </li>
+<li>So we need to copy the ground truth heatMap to that position as is as shown in the code below</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">radius</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">heatmap</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+<span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">heatmap</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">center</span>
+<span class="c1"># we are doing this because the kernel may lie outside the heatmap for example near corners</span>
+<span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">width</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">top</span><span class="p">,</span> <span class="n">bottom</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">radius</span><span class="p">),</span> <span class="nb">min</span><span class="p">(</span><span class="n">height</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="n">masked_heatmap</span> <span class="o">=</span> <span class="n">heatmap</span><span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">:</span><span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">:</span><span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">]</span>
+<span class="n">masked_gaussian</span> <span class="o">=</span> <span class="n">h</span><span class="p">[</span><span class="n">radius</span> <span class="o">-</span> <span class="n">top</span><span class="p">:</span><span class="n">radius</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">,</span>
+                                      <span class="n">radius</span> <span class="o">-</span> <span class="n">left</span><span class="p">:</span><span class="n">radius</span> <span class="o">+</span> <span class="n">right</span><span class="p">]</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">masked_gaussian</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>tensor([[0.0183, 0.0821, 0.1353, 0.0821, 0.0183],
+        [0.0821, 0.3679, 0.6065, 0.3679, 0.0821],
+        [0.1353, 0.6065, 1.0000, 0.6065, 0.1353],
+        [0.0821, 0.3679, 0.6065, 0.3679, 0.0821],
+        [0.0183, 0.0821, 0.1353, 0.0821, 0.0183]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">masked_heatmap</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>tensor([[0., 0., 0., 0., 0.],
+        [0., 0., 0., 0., 0.],
+        [0., 0., 0., 0., 0.],
+        [0., 0., 0., 0., 0.],
+        [0., 0., 0., 0., 0.]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out_heatmap</span> <span class="o">=</span> <span class="n">heatmap</span>
+<span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+        <span class="n">masked_heatmap</span><span class="p">,</span>
+        <span class="n">masked_gaussian</span> <span class="p">,</span>
+        <span class="n">out</span><span class="o">=</span><span class="n">out_heatmap</span><span class="p">[</span><span class="n">y</span> <span class="o">-</span> <span class="n">top</span><span class="p">:</span><span class="n">y</span> <span class="o">+</span> <span class="n">bottom</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">left</span><span class="p">:</span><span class="n">x</span> <span class="o">+</span> <span class="n">right</span><span class="p">])</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>tensor([[0.0183, 0.0821, 0.1353, 0.0821, 0.0183],
+        [0.0821, 0.3679, 0.6065, 0.3679, 0.0821],
+        [0.1353, 0.6065, 1.0000, 0.6065, 0.1353],
+        [0.0821, 0.3679, 0.6065, 0.3679, 0.0821],
+        [0.0183, 0.0821, 0.1353, 0.0821, 0.0183]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out_heatmap</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>tensor([[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        [0.0000, 0.0183, 0.0821, 0.1353, 0.0821, 0.0183, 0.0000, 0.0000],
+        [0.0000, 0.0821, 0.3679, 0.6065, 0.3679, 0.0821, 0.0000, 0.0000],
+        [0.0000, 0.1353, 0.6065, 1.0000, 0.6065, 0.1353, 0.0000, 0.0000],
+        [0.0000, 0.0821, 0.3679, 0.6065, 0.3679, 0.0821, 0.0000, 0.0000],
+        [0.0000, 0.0183, 0.0821, 0.1353, 0.0821, 0.0183, 0.0000, 0.0000],
+        [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+        [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">out_heatmap</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>torch.Size([8, 8])</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see that the heatmap has been placed with a value of 1 as (3,3) which is the center we gave.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now look at how the losses will work.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="HeatMap-loss">
+<a class="anchor" href="#HeatMap-loss" aria-hidden="true"><span class="octicon octicon-link"></span></a>HeatMap loss<a class="anchor-link" href="#HeatMap-loss"> </a>
+</h1>
+<ol>
+<li>Suppose we have 4 classes, 2 batches and feature map size be 8, then the predicted heatmap will be of shape 2,4,8,8 . (batch,num_classes,height,width)</li>
+<li>Suppose we have two images and  one bounding box each in two images, let the first image have class id 0 and the second image have classid 2 . So the corresponding depth will have the heatmap gaussian as the ground truth with center having one and the gaussian kernel spread around.</li>
+<li>For now we will use the above geneareted heatmap as the  object , that is we have object at center 3,3 at id 0 in first image and at id 2 in second image.</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">groundTruth</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"GroundTruth shape"</span><span class="p">,</span><span class="n">groundTruth</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="c1"># now we need to copy the heat map we generated above to the positions of the class ids,</span>
+<span class="c1"># here we have assumed the in the first image the class id 0 is having the bounding box</span>
+<span class="c1"># and in the image 2 the classid 2 is having the object, for simplicity we are assuming</span>
+<span class="c1"># that both the images have same heat map an center, the assignment is as follows then</span>
+<span class="n">groundTruth</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">out_heatmap</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+<span class="n">groundTruth</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">out_heatmap</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Ground Truth </span><span class="se">\n</span><span class="s2">"</span><span class="p">,</span><span class="n">groundTruth</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>GroundTruth shape torch.Size([2, 4, 8, 8])
+Ground Truth 
+ tensor([[[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0183, 0.0821, 0.1353, 0.0821, 0.0183, 0.0000, 0.0000],
+          [0.0000, 0.0821, 0.3679, 0.6065, 0.3679, 0.0821, 0.0000, 0.0000],
+          [0.0000, 0.1353, 0.6065, 1.0000, 0.6065, 0.1353, 0.0000, 0.0000],
+          [0.0000, 0.0821, 0.3679, 0.6065, 0.3679, 0.0821, 0.0000, 0.0000],
+          [0.0000, 0.0183, 0.0821, 0.1353, 0.0821, 0.0183, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+
+         [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+
+         [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+
+         [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]],
+
+
+        [[[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+
+         [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+
+         [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0183, 0.0821, 0.1353, 0.0821, 0.0183, 0.0000, 0.0000],
+          [0.0000, 0.0821, 0.3679, 0.6065, 0.3679, 0.0821, 0.0000, 0.0000],
+          [0.0000, 0.1353, 0.6065, 1.0000, 0.6065, 0.1353, 0.0000, 0.0000],
+          [0.0000, 0.0821, 0.3679, 0.6065, 0.3679, 0.0821, 0.0000, 0.0000],
+          [0.0000, 0.0183, 0.0821, 0.1353, 0.0821, 0.0183, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]],
+
+         [[0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000],
+          [0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000, 0.0000]]]])
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we will make a random prediction and see how we calculate the losses</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># the loss is as the described in the paper and is a modified focal loss</span>
+<span class="n">alpha</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="n">gamma</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">eps</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="n">pos_weights</span> <span class="o">=</span> <span class="n">groundTruth</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">neg_weigths</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">groundTruth</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>From the heat map we can see that the negative samples will be much more and therefore they introduced this modified version of focal loss to counteract that</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">pos_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">pred</span><span class="o">+</span><span class="n">eps</span><span class="p">)</span><span class="o">.</span><span class="n">log</span><span class="p">()</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pred</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">pos_weights</span>
+<span class="n">neg_loss</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">pred</span><span class="o">+</span> <span class="n">eps</span><span class="p">)</span><span class="o">.</span><span class="n">log</span><span class="p">()</span><span class="o">*</span><span class="n">pred</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="n">neg_weigths</span>
+<span class="n">final_loss</span> <span class="o">=</span> <span class="n">pos_loss</span> <span class="o">+</span> <span class="n">neg_loss</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">final_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>tensor(181.3507)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1 id="GroundTruth-WH-and-WH-offset">
+<a class="anchor" href="#GroundTruth-WH-and-WH-offset" aria-hidden="true"><span class="octicon octicon-link"></span></a>GroundTruth WH and WH offset<a class="anchor-link" href="#GroundTruth-WH-and-WH-offset"> </a>
+</h1>
+<ol>
+<li>The the head predicts the wh in the shape of batch,2,height,widht and the same is the shape of offset head</li>
+<li>For wh head the bbox scaled down widht and height will be placed at the indexes 0 and 1.</li>
+<li>For offset head the the corressponding difference in offset will be placed at the corresponding indexes.</li>
+<li>To understand it better, initially we have assumed that we have an image of shape (64,64) and after scaling down it becomes (8,8). And suppose in the original image the bounding box center is at (28,28) so when we scale it down to feature map level it becomem 28/8 = 3.5 and we have to take the int of that so the offset difference is (3.5 -3) which is 0.5. Its as shown below.</li>
+</ol>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#so cx and cy will be </span>
+<span class="n">ctx</span><span class="p">,</span><span class="n">cty</span> <span class="o">=</span> <span class="mi">28</span><span class="o">/</span><span class="mi">8</span> <span class="p">,</span><span class="mi">28</span><span class="o">/</span><span class="mi">8</span>
+<span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ctx</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">cty</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"orginal scaled down "</span><span class="p">,(</span><span class="n">ctx</span><span class="p">,</span> <span class="n">cty</span><span class="p">)</span> <span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"floored version "</span> <span class="p">,(</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"offset is "</span><span class="p">,(</span><span class="n">ctx</span><span class="o">-</span> <span class="n">ctx_int</span><span class="p">,</span><span class="n">cty</span><span class="o">-</span><span class="n">cty_int</span><span class="p">))</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>orginal scaled down  (3.5, 3.5)
+floored version  (3, 3)
+offset is  (0.5, 0.5)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># now we generate the ground truth</span>
+<span class="n">groundTruthWH</span> <span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">groundTruthWHOffset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">groundTruthWHOffsetWeights</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># so for the we have said that the object is same position in both the images, so when</span>
+<span class="c1"># groundTruth is set the to be predicted width and height at the same position</span>
+
+<span class="n">groundTruthWHOffset</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-</span> <span class="n">ctx_int</span>
+<span class="n">groundTruthWHOffset</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">]</span> <span class="o">=</span> <span class="n">cty</span><span class="o">-</span><span class="n">cty_int</span>
+
+
+<span class="c1"># we are asuming the object is at the same position in both the images so the</span>
+<span class="c1"># above will be the same for batchid 1</span>
+<span class="n">groundTruthWHOffset</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">-</span> <span class="n">ctx_int</span>
+<span class="n">groundTruthWHOffset</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">]</span> <span class="o">=</span> <span class="n">cty</span><span class="o">-</span><span class="n">cty_int</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We need set weights because we need to consider loss only from the places
+there was an object</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">groundTruthWHOffsetWeights</span><span class="p">[</span><span class="mi">0</span><span class="p">,:,</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="c1">#since the second batch image is also at the same place</span>
+<span class="n">groundTruthWHOffsetWeights</span><span class="p">[</span><span class="mi">1</span><span class="p">,:,</span><span class="n">ctx_int</span><span class="p">,</span><span class="n">cty_int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Lets make a random prediction to calculate the loss</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">predWH</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">predWHOffset</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The loss we use for the wh and wh_offset are the same and is the l1_loss</p>
+
+</div>
+</div>
+</div>
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">l1_loss</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+    <span class="sd">"""L1 loss.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pred (torch.Tensor): The prediction.</span>
+<span class="sd">        target (torch.Tensor): The learning target of the prediction.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        torch.Tensor: Calculated loss</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pred</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">*</span> <span class="mi">0</span>
+
+    <span class="k">assert</span> <span class="n">pred</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="n">target</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">pred</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loss</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1">#Note we are multiplying by the weights in the end to get the loss from required poistion only</span>
+<span class="n">WHLoss</span> <span class="o">=</span> <span class="n">l1_loss</span><span class="p">(</span><span class="n">predWH</span><span class="p">,</span><span class="n">groundTruthWH</span><span class="p">)</span><span class="o">*</span><span class="n">groundTruthWHOffsetWeights</span>
+<span class="n">WHOffsetLoss</span> <span class="o">=</span> <span class="n">l1_loss</span><span class="p">(</span><span class="n">predWHOffset</span><span class="p">,</span><span class="n">groundTruthWHOffset</span><span class="p">)</span><span class="o">*</span><span class="n">groundTruthWHOffsetWeights</span>
+
+<span class="n">WHLoss</span> <span class="o">=</span> <span class="n">WHLoss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="n">WHOffsetLoss</span> <span class="o">=</span> <span class="n">WHOffsetLoss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    
+
+    
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">"Ground Truth Loss "</span><span class="p">,</span><span class="n">WHLoss</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Ground Offset Loss "</span><span class="p">,</span><span class="n">WHOffsetLoss</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Ground Truth Loss  tensor(3.6995)
+Ground Offset Loss  tensor(2.0938)
+</pre>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+    
+
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Final-Loss">
+<a class="anchor" href="#Final-Loss" aria-hidden="true"><span class="octicon octicon-link"></span></a>Final Loss<a class="anchor-link" href="#Final-Loss"> </a>
+</h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The final loss is the weighted sum of the heapmap loss, wh loss and wh_offset loss.There is a little more things involved and in the <a href="https://github.com/akashprakas/CenterNet">repo</a> i have showed how these are actually done in a real implemenation. Hope this was helpful</p>
+
+</div>
+</div>
+</div>
+</div>
+
+
+
+  </div><!-- from https://github.com/utterance/utterances -->
+<script src="https://utteranc.es/client.js"
+        repo="akashprakas/My-blog"
+        issue-term="title"
+        label="blogpost-comment"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script><a class="u-url" href="/My-blog/jupyter/2022/08/24/Understanding-the-losses-in-CenterNet-Architecture.html" hidden></a>
+</article>
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/My-blog/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="/My-blog/feed.xml">
+            <svg class="svg-icon orange">
+              <use xlink:href="/My-blog/assets/minima-social-icons.svg#rss"></use>
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+      </div>
+      <div class="footer-col">
+        <p>Writing of some technical stuff.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"><li><a rel="me" href="https://twitter.com/akashaapz" target="_blank" title="akashaapz"><svg class="svg-icon grey"><use xlink:href="/My-blog/assets/minima-social-icons.svg#twitter"></use></svg></a></li></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
