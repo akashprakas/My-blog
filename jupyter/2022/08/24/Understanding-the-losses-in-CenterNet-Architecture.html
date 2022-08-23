@@ -163,7 +163,7 @@ window.onload = wrap_img;
 <div class="cell border-box-sizing text_cell rendered">
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>This is  a small demo of the how the ground truths and loss will look in centerNet. Most of the code is from <a href="https://github.com/open-mmlab/mmdetection">MMdetection</a>. The idea here is to show a demo part so that the code is understandable. The repo for understanding the architecure can be found <a href="https://github.com/akashprakas/CenterNet">here</a> . To understand the architecture please go through the blog by <a href="https://medium.com/visionwizard/centernet-objects-as-points-a-comprehensive-guide-2ed9993c48bc">Shreejal Trivedi</a>.</p>
+<p>This is  a small demo of the how the ground truths and loss will look in centerNet. Most of the code is from <a href="https://github.com/open-mmlab/mmdetection">MMdetection</a>. The idea here is to show a demo part so that the code is understandable. My repo for understanding the architecure can be found <a href="https://github.com/akashprakas/CenterNet">here</a> . To understand the architecture please go through the blog by <a href="https://medium.com/visionwizard/centernet-objects-as-points-a-comprehensive-guide-2ed9993c48bc">Shreejal Trivedi</a>.</p>
 
 </div>
 </div>
@@ -175,7 +175,7 @@ window.onload = wrap_img;
 <a class="anchor" href="#How-to-generate-the-groundTruth-heat-maps" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to generate the groundTruth heat maps<a class="anchor-link" href="#How-to-generate-the-groundTruth-heat-maps"> </a>
 </h1>
 <ol>
-<li>We need to generate heatmap, the heatmap is generated such that at the center of the image the value will be 1 and decreasing around it like a gaussian.</li>
+<li>We need to generate heatmap, the heatmap is generated such that at the center of the image, where the bounding box is  the value will be 1 and decreasing around it like a gaussian.</li>
 <li>To calculate the radius we use the bbox height and width which have been scaled down to the feature map level.</li>
 <li>We can use the same function used in <a href="https://mmdetection.readthedocs.io/en/latest/_modules/mmdet/models/utils/gaussian_target.html">MMdetection</a>. You can find the detailed description in this <a href="https://mmdetection.readthedocs.io/en/latest/_modules/mmdet/models/utils/gaussian_target.html">link</a>
 </li>
